@@ -2,18 +2,29 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 
+	"github.com/Jalenarms1/go-eat/internal/db"
 	"github.com/Jalenarms1/go-eat/internal/handlers"
 	"github.com/joho/godotenv"
 )
 
-func main() {
+func init() {
 	if err := godotenv.Load(); err != nil {
 		fmt.Println(err)
 		return
 	}
+
+	if err := db.SetDb(); err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("DB Connected")
+}
+
+func main() {
 
 	mux := http.NewServeMux()
 

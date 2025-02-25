@@ -8,19 +8,24 @@ import (
 )
 
 func registerRouter(mux *http.ServeMux) {
-	mux.HandleFunc("/", catchErrorHandlerFunc(handlers.HandleRoot))
 
 	mux.HandleFunc("/sign-up", catchErrorHandlerFunc(handlers.HandleSignUpPage))
 
-	mux.HandleFunc("/food-shop", catchErrorHandlerFunc(func(w http.ResponseWriter, r *http.Request) error {
-		switch r.Method {
-		case http.MethodPost:
-			return handlers.HandleNewShop(w, r)
-		default:
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-			return nil
+	mux.Handle("/create-food-shop", dashboardRoute(catchErrorHandlerFunc(handlers.HandleNewShop)))
+
+}
+
+func dashboardRoute(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		subDomain := r.Context().Value(handlers.SubDomainCtxKey).(string)
+
+		if subDomain != "dashboard" {
+			http.Error(w, "path not accesible from outside of the dashboard space", http.StatusBadRequest)
+			return
 		}
-	}))
+
+		next.ServeHTTP(w, r)
+	})
 }
 
 type HttpErrorHandlerFunc func(w http.ResponseWriter, r *http.Request) error
